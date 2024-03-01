@@ -42,6 +42,14 @@ let rotor_count = 10;
 let particle_count = 4000;
 
 
+let R = 5;
+
+if (document.documentElement.scrollWidth < document.documentElement.scrollHeight)
+            R = 6;
+        else{
+            R = 3;
+        }
+
 function set_bg_params(rf, rc, pc){
     rotor_force = rf;
     rotor_count = rc;
@@ -56,13 +64,18 @@ class somePot{
         this.pos = [x_pos, y_pos];
         this.color = [255 * Math.random(), 255 * Math.random(), 255 * Math.random()];
         this.F = 0.04;
+        if (document.documentElement.scrollWidth < document.documentElement.scrollHeight)
+            this.r = 300;
+        else{
+            this.r = 150;
+        }
     }
     get_force(xi, yi){
         let a = [xi - this.pos[0], yi - this.pos[1]];
         let x = a[0];
         let y = a[1];
         let k = 1.0;
-        let r = 250;
+        let r = this.r;
         let q = (x*x + (k*y + r)*(k*y + r) - r*r) + (x*x + (k*y - r)*(k*y - r) - r*r);
 
         let gx = (((((x*2)+(((k*y)+(-r))*2))*((-Math.pow(r, 2))+Math.pow(x, 2)+Math.pow(((k*y)+r), 2)))+(((-Math.pow(r, 2))+Math.pow(x, 2)+Math.pow(((k*y)+(-r)), 2))*((x*2)+(((k*y)+r)*2))))*((-Math.pow(r, 2))+Math.pow(x, 2)+Math.pow(((k*y)+(-r)), 2))*((-Math.pow(r, 2))+Math.pow(x, 2)+Math.pow(((k*y)+r), 2))*2);
@@ -81,8 +94,9 @@ class somePot{
         let x = a[0];
         let y = a[1];
         let k = 1.0;
-        let r = 150;
-        let D = Math.pow(Math.min((x*x + (y*k - r)*(y*k - r) - r*r), (x*x + (y*k + r)*(y*k + r) - r*r)), 0.5);
+        let r = this.r;
+        let D = Math.pow(Math.min(Math.abs(x*x + (y*k - r)*(y*k - r) - r*r), Math.abs(x*x + (y*k + r)*(y*k + r) - r*r)), 0.6);
+        //let D = Math.pow(Math.abs((x*x + (y*k - r)*(y*k - r) - r*r)* (x*x + (y*k + r)*(y*k + r) - r*r)), 0.5);
         return D/100.0;
     }
 }
@@ -110,7 +124,7 @@ function LEN(x, y){
 
 class bg_particle{
     constructor (color, x_pos, y_pos){
-        this.color = [0, 0, 0];
+        this.color = [Math.random()*255, Math.random()*255, Math.random()*255];
         this.pos = [x_pos, y_pos];
         this.last_pos = [0, 0];
         this.movement = [0, 0];
@@ -123,8 +137,8 @@ class bg_particle{
     update_movement() {
         this.movement = [this.movement[0]*0.9, this.movement[1]*0.9];
         let disr = 0;
-        this.color = [0, 0, 0];
-        for (i = 0; i < rotator_array.length; i++) {
+        //this.color = [0, 0, 0];
+        /*for (i = 0; i < rotator_array.length; i++) {
             //this.movement[0] += rotator_array[i].get_force(this.pos[0], this.pos[1])[0];
             //this.movement[1] += rotator_array[i].get_force(this.pos[0], this.pos[1])[1];
             let a = [rotator_array[i].pos[0] - this.pos[0], rotator_array[i].pos[1] - this.pos[1]];
@@ -133,17 +147,17 @@ class bg_particle{
             this.color[0] += rad * rotator_array[i].color[0];
             this.color[1] += rad * rotator_array[i].color[1];
             this.color[2] += rad * rotator_array[i].color[2];
-        }
+        }*/
 
         let D = [X_pos - this.pos[0], Y_pos - this.pos[1]];
         let l = LEN(D[0], D[1]);
         D = normalize(D[0], D[1]);
         if (l > 0){
-            this.movement[0] += D[0]*2.0/l;
-            this.movement[1] += D[1]*2.0/l;
+            this.movement[0] += -D[0]*6.0/l;
+            this.movement[1] += -D[1]*6.0/l;
         }
 
-        this.color = [this.bk*this.color[0]/disr, this.bk*this.color[1]/disr, this.bk*this.color[2]/disr];
+        //this.color = [this.bk*this.color[0]/disr, this.bk*this.color[1]/disr, this.bk*this.color[2]/disr];
         this.alpha = (1 - 2 * Math.abs(0.5 - this.time)) ;
     }
 
@@ -159,14 +173,14 @@ class bg_particle{
         
         this.pos[0] += this.movement[0];
         this.pos[1] += this.movement[1];
-        draw_circle(bg_ctx, "rgba(" + String(this.color[0]) + "," + String(this.color[1]) + "," + String(this.color[2])  + "," + String(this.alpha)+ ")", this.pos[0], this.pos[1], 5*this.get_dens())
+        draw_circle(bg_ctx, "rgba(" + String(this.color[0]) + "," + String(this.color[1]) + "," + String(this.color[2])  + "," + String(this.alpha)+ ")", this.pos[0], this.pos[1], R*(this.get_dens() + 1/5))
+        this.life_time_k = this.bk*0.05*(0.3 + (1 - this.get_dens())*(1 - 0.3));
         this.time += this.life_time_k;
         if (this.time >= 1){
 
                 this.time = 0;
                 this.pos = [Math.random() * bg_canvas.width, Math.random() * bg_canvas.height]
                 this.bk = (0.1 + Math.random() * (1 - 0.1));
-                this.life_time_k = 0.05*(0.1 + (1 - this.get_dens())*(1 - 0.1));
         }
     }
 }
