@@ -137,24 +137,13 @@ class bg_particle{
     update_movement() {
         this.movement = [this.movement[0]*0.9, this.movement[1]*0.9];
         let disr = 0;
-        //this.color = [0, 0, 0];
-        /*for (i = 0; i < rotator_array.length; i++) {
-            //this.movement[0] += rotator_array[i].get_force(this.pos[0], this.pos[1])[0];
-            //this.movement[1] += rotator_array[i].get_force(this.pos[0], this.pos[1])[1];
-            let a = [rotator_array[i].pos[0] - this.pos[0], rotator_array[i].pos[1] - this.pos[1]];
-            let rad = 1/((a[0] * a[0] + a[1] * a[1] ));
-            disr += rad;
-            this.color[0] += rad * rotator_array[i].color[0];
-            this.color[1] += rad * rotator_array[i].color[1];
-            this.color[2] += rad * rotator_array[i].color[2];
-        }*/
 
         let D = [X_pos - this.pos[0], Y_pos - this.pos[1]];
         let l = LEN(D[0], D[1]);
         D = normalize(D[0], D[1]);
         if (l > 0){
-            this.movement[0] += -D[0]*6.0/l;
-            this.movement[1] += -D[1]*6.0/l;
+            this.movement[0] += -D[1]*20.0/l;
+            this.movement[1] += D[0]*20.0/l;
         }
 
         //this.color = [this.bk*this.color[0]/disr, this.bk*this.color[1]/disr, this.bk*this.color[2]/disr];
@@ -193,8 +182,8 @@ function update_bg_logic(){
 }
 
 function reload_bg() {
-    bg_ctx.fillStyle = 'rgba(230, 230, 230, 1)';
-    bg_ctx.fillRect(0, 0, bg_canvas.width, bg_canvas.height);
+    //bg_ctx.fillStyle = 'rgba(230, 230, 230, 1)';
+    //bg_ctx.fillRect(0, 0, bg_canvas.width, bg_canvas.height);
     bg_particle_array = [];
     rotator_array = [];
     for (i = 0; i < particle_count; i++) {
@@ -212,7 +201,7 @@ bg_canvas.width = document.documentElement.scrollWidth;
 bg_canvas.height = document.documentElement.scrollHeight;
 reload_bg();
 function update_bg_frame() {
-    bg_ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+    bg_ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
     bg_ctx.fillRect(0, 0, bg_canvas.width, bg_canvas.height);
     update_bg_logic();
 }
