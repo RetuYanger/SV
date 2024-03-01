@@ -7,6 +7,7 @@ canvas.BG_canvas {
 
 body.SomeClass {
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    background-color: rgb(16, 14, 17);
 }
 
 p.someBig {

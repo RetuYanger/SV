@@ -39,7 +39,7 @@ let global_time = 0;
 
 let rotor_force = 1000;
 let rotor_count = 10;
-let particle_count = 1000;
+let particle_count = 4000;
 
 
 function set_bg_params(rf, rc, pc){
@@ -51,103 +51,62 @@ function set_bg_params(rf, rc, pc){
     reload_bg();
 }
 
-class rotator{
+class somePot{
     constructor(x_pos, y_pos) {
         this.pos = [x_pos, y_pos];
-        this.q = rotor_force*2*(Math.random() - 0.5);
         this.color = [255 * Math.random(), 255 * Math.random(), 255 * Math.random()];
+        this.F = 0.04;
     }
-    get_force(x, y){
-        let a = [x - this.pos[0], y - this.pos[1]]
-        let rad = Math.pow((a[0]*a[0] + a[1]*a[1]), 1);
-        return [-this.q * a[1] / rad, this.q * a[0] / rad]; 
-    }
-}
+    get_force(xi, yi){
+        let a = [xi - this.pos[0], yi - this.pos[1]];
+        let x = a[0];
+        let y = a[1];
+        let k = 1.0;
+        let r = 250;
+        let q = (x*x + (k*y + r)*(k*y + r) - r*r) + (x*x + (k*y - r)*(k*y - r) - r*r);
 
-function sigmoid(x){
-    return 1.0/(1.0 + Math.exp(-x*0.04))
-}
-
-class psevdo_rotator{
-    constructor(x_pos, y_pos, q, d) {
-        this.pos = [x_pos, y_pos];
-        this.q = rotor_force*2*q;
-        this.color = [255 * Math.random(), 255 * Math.random(), 255 * Math.random()];
-        this.d = d;
-    }
-    get_force(x, y){
-        let a = [x - this.pos[0], y - this.pos[1]];
-        let rad = Math.pow((a[0]*a[0] + a[1]*a[1]), 1);
-        let q = this.q * (sigmoid(a[0]*this.d));
-        return [-q * a[1] / rad, q * a[0] / rad]; 
-    }
-}
-
-class rotator_like{
-    constructor(x_pos, y_pos, q, d) {
-        this.pos = [x_pos, y_pos];
-        this.q = rotor_force*150000*q;
-        this.color = [255 * Math.random(), 255 * Math.random(), 255 * Math.random()];
-        this.d = d;
-    }
-    get_force(x, y){
-        let a = [x - this.pos[0], y - this.pos[1]];
-        let rad = Math.pow(a[0]*a[0] + a[1]*a[1], 2.0);
-        let radSqrt = Math.pow(a[0]*a[0] + a[1]*a[1], 0.5);
-        let b1 = [Math.cos(this.d), Math.sin(this.d)];
-        let b2 = [-Math.sin(this.d), Math.cos(this.d)];
-        let q = this.q;
-        let A = q / rad;
-        let dot1 = b1[0]*a[0] + b1[1]*a[1];
-        let dot2 = b2[0]*a[0] + b2[1]*a[1];
-
-        let Circ = [-A * a[1], A * a[0]];
-        let line = [A*b2[0]*radSqrt, A*b2[1]*radSqrt];
-        let t = sigmoid(dot1 - 300.0) * sigmoid(dot2 - 0.0)
-        return [Circ[0]*(1- t) + t*line[0], Circ[1]*(1 - t) + t*line[1]]
-    }
-}
-
-class rotator_like_backup{
-    constructor(x_pos, y_pos, q, d) {
-        this.pos = [x_pos, y_pos];
-        this.q = rotor_force*2*q;
-        this.color = [255 * Math.random(), 255 * Math.random(), 255 * Math.random()];
-        this.d = d;
-    }
-    get_force(x, y){
-        let a = [x - this.pos[0], y - this.pos[1]];
-        let rad = (a[0]*a[0] + a[1]*a[1]);
-        let radSqrt = Math.pow(a[0]*a[0] + a[1]*a[1], 0.5);
-        let b1 = [Math.cos(this.d), Math.sin(this.d)];
-        let b2 = [-Math.sin(this.d), Math.cos(this.d)];
-        let q = this.q;
-        let A = q / rad;
-        let dot1 = b1[0]*a[0] + b1[1]*a[1];
-        let dot2 = b2[0]*a[0] + b2[1]*a[1];
-        if (Math.sign(dot1) > 0 && Math.sign(dot2) > 0){
-            return [A*b2[0]*radSqrt, A*b2[1]*radSqrt];
+        let gx = (((((x*2)+(((k*y)+(-r))*2))*((-Math.pow(r, 2))+Math.pow(x, 2)+Math.pow(((k*y)+r), 2)))+(((-Math.pow(r, 2))+Math.pow(x, 2)+Math.pow(((k*y)+(-r)), 2))*((x*2)+(((k*y)+r)*2))))*((-Math.pow(r, 2))+Math.pow(x, 2)+Math.pow(((k*y)+(-r)), 2))*((-Math.pow(r, 2))+Math.pow(x, 2)+Math.pow(((k*y)+r), 2))*2);
+        let gy = (((((-Math.pow(r, 2))+Math.pow(x, 2)+Math.pow(((k*y)+r), 2))*((k*y)+(-r))*k*2)+(((-Math.pow(r, 2))+Math.pow(x, 2)+Math.pow(((k*y)+(-r)), 2))*((k*y)+r)*k*2))*((-Math.pow(r, 2))+Math.pow(x, 2)+Math.pow(((k*y)+(-r)), 2))*((-Math.pow(r, 2))+Math.pow(x, 2)+Math.pow(((k*y)+r), 2))*2)
+        let lg = Math.pow(gx*gx + gy*gy, 0.5);
+        let D = Math.max(Math.min(10, 0.000000001*Math.abs((x*x + (y*k - r)*(y*k - r) - r*r)*(x*x + (y*k + r)*(y*k + r) - r*r))), 0.1);
+        if (lg > 0.0){
+            return [-this.F*D*gx/lg, this.F*D*gy/lg];
         }
         else{
-            return [-A * a[1], A * a[0]];
+            return [0.0, 0.0];
         }
     }
-}
-
-class determistic_rotator{
-    constructor(x_pos, y_pos, q) {
-        this.pos = [x_pos, y_pos];
-        this.q = rotor_force*2*q;
-        this.color = [255 * Math.random(), 255 * Math.random(), 255 * Math.random()];
-    }
-    get_force(x, y){
-        let a = [x - this.pos[0], y - this.pos[1]];
-        let rad = Math.pow((a[0]*a[0] + a[1]*a[1]), 1);
-        let q = this.q;
-        return [-q * a[1] / rad, q * a[0] / rad]; 
+    get_dens(xi, yi){
+        let a = [xi - this.pos[0], yi - this.pos[1]];
+        let x = a[0];
+        let y = a[1];
+        let k = 1.0;
+        let r = 150;
+        let D = Math.pow(Math.min((x*x + (y*k - r)*(y*k - r) - r*r), (x*x + (y*k + r)*(y*k + r) - r*r)), 0.5);
+        return D/100.0;
     }
 }
+function sigmoid(x){
+    return 1.0/(1.0 + Math.exp(-x*0.4));
+}
 
+function Dsigmoid(x){
+    return 4*sigmoid(2.0*x)*sigmoid(-2.0*x);
+}
+
+function normalize(x, y){
+    let l = Math.pow(x*x+y*y, 0.5);
+    if (l > 0.0){
+        return [x/l, y/l];
+    }
+    else{
+        return [0, 0];
+    }
+}
+
+function LEN(x, y){
+    return Math.pow(x*x+y*y, 0.5);
+}
 
 class bg_particle{
     constructor (color, x_pos, y_pos){
@@ -162,12 +121,12 @@ class bg_particle{
     }
 
     update_movement() {
-        this.movement = [0, 0];
+        this.movement = [this.movement[0]*0.9, this.movement[1]*0.9];
         let disr = 0;
         this.color = [0, 0, 0];
         for (i = 0; i < rotator_array.length; i++) {
-            this.movement[0] += rotator_array[i].get_force(this.pos[0], this.pos[1])[0];
-            this.movement[1] += rotator_array[i].get_force(this.pos[0], this.pos[1])[1];
+            //this.movement[0] += rotator_array[i].get_force(this.pos[0], this.pos[1])[0];
+            //this.movement[1] += rotator_array[i].get_force(this.pos[0], this.pos[1])[1];
             let a = [rotator_array[i].pos[0] - this.pos[0], rotator_array[i].pos[1] - this.pos[1]];
             let rad = 1/((a[0] * a[0] + a[1] * a[1] ));
             disr += rad;
@@ -175,25 +134,39 @@ class bg_particle{
             this.color[1] += rad * rotator_array[i].color[1];
             this.color[2] += rad * rotator_array[i].color[2];
         }
+
+        let D = [X_pos - this.pos[0], Y_pos - this.pos[1]];
+        let l = LEN(D[0], D[1]);
+        D = normalize(D[0], D[1]);
+        if (l > 0){
+            this.movement[0] += D[0]*2.0/l;
+            this.movement[1] += D[1]*2.0/l;
+        }
+
         this.color = [this.bk*this.color[0]/disr, this.bk*this.color[1]/disr, this.bk*this.color[2]/disr];
         this.alpha = (1 - 2 * Math.abs(0.5 - this.time)) ;
     }
 
-    update_position() {
-        this.last_pos = [this.pos[0], this.pos[1]];
-        let l = Math.pow(this.movement[0]*this.movement[0] + this.movement[1]*this.movement[1], 0.5);
-        if (l > 25){
-            return ;
+    get_dens(){
+        let S = 0;
+        for (i = 0; i < rotator_array.length; i++) {
+            S += rotator_array[i].get_dens(this.pos[0], this.pos[1])/rotator_array.length;
         }
+        return Dsigmoid(S);
+    }
+
+    update_position() {
+        
         this.pos[0] += this.movement[0];
         this.pos[1] += this.movement[1];
-        draw_line(bg_ctx, "rgba(" + String(this.color[0]) + "," + String(this.color[1]) + "," + String(this.color[2])  + "," + String(this.alpha)+ ")", this.pos[0], this.pos[1], this.last_pos[0], this.last_pos[1]);
+        draw_circle(bg_ctx, "rgba(" + String(this.color[0]) + "," + String(this.color[1]) + "," + String(this.color[2])  + "," + String(this.alpha)+ ")", this.pos[0], this.pos[1], 5*this.get_dens())
         this.time += this.life_time_k;
         if (this.time >= 1){
-            this.time = 0;
-            this.pos = [Math.random() * bg_canvas.width, Math.random() * bg_canvas.height]
-            this.last_pos = [this.pos[0], this.pos[1]];
-            this.bk = (0.1 + Math.random() * (1 - 0.1));
+
+                this.time = 0;
+                this.pos = [Math.random() * bg_canvas.width, Math.random() * bg_canvas.height]
+                this.bk = (0.1 + Math.random() * (1 - 0.1));
+                this.life_time_k = 0.05*(0.1 + (1 - this.get_dens())*(1 - 0.1));
         }
     }
 }
@@ -213,8 +186,7 @@ function reload_bg() {
     for (i = 0; i < particle_count; i++) {
         bg_particle_array.push(new bg_particle('rgb(0, 255, 0)', Math.random() * bg_canvas.width, Math.random() * bg_canvas.height));
     }
-    rotator_array.push(new rotator_like(0.5 * bg_canvas.width, 0.34 * bg_canvas.height, 2.3, Math.PI/3));
-    rotator_array.push(new rotator_like(0.5 * bg_canvas.width, 0.66 * bg_canvas.height, -2.3, Math.PI + Math.PI/3));
+    rotator_array.push(new somePot(0.5* bg_canvas.width, 0.5* bg_canvas.height));
 
 
     for (i = 0; i < 0; i++) {
@@ -226,6 +198,8 @@ bg_canvas.width = document.documentElement.scrollWidth;
 bg_canvas.height = document.documentElement.scrollHeight;
 reload_bg();
 function update_bg_frame() {
+    bg_ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+    bg_ctx.fillRect(0, 0, bg_canvas.width, bg_canvas.height);
     update_bg_logic();
 }
 setInterval(update_bg_frame, 0);
